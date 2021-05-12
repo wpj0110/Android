@@ -53,6 +53,7 @@ implements View.OnClickListener, View.OnLongClickListener {
     private ArrayAdapter<String> arrayAdapter;
 
     private ArrayList<Country> countryData = new ArrayList<>();
+    private final ArrayList<String> countryStringList = new ArrayList<>();
     private final ArrayList<ArrayList<String>> stockListDB = new ArrayList<>();
 
     static String country;
@@ -219,7 +220,11 @@ implements View.OnClickListener, View.OnLongClickListener {
     public void updateCountry(ArrayList<Country> listIn) {
 
         Log.d(TAG, "updateCountry: listln = "+listIn);
+        for (int i = 0 ; i < listIn.size() ; i++)
+            countryStringList.add(listIn.get(i).toString());
         countryData = listIn;
+        arrayAdapter = new ArrayAdapter<>(this, R.layout.drawer_item, countryStringList);
+        mDrawerList.setAdapter(arrayAdapter);
 
     }
 
