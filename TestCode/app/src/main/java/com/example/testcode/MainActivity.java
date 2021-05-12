@@ -155,6 +155,7 @@ implements View.OnClickListener, View.OnLongClickListener {
 
     public void updateCountry(ArrayList<Country> listIn) {
 
+        Log.d(TAG, "updateCountry: listln = "+listIn);
         countryData = listIn;
 
     }
@@ -162,7 +163,7 @@ implements View.OnClickListener, View.OnLongClickListener {
     public void noMatches(){
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("No matches");
-        builder.setMessage("no data");
+        builder.setMessage("Try a different query, or Look it up from the list.");
         AlertDialog dialog1 = builder.create();
         dialog1.show();
     }
