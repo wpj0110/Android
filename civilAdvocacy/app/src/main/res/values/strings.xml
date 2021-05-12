@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">civilAdvocacyApp</string>
+    <string name="searchbutton">searchButton</string>
+    <string name="searchmenu">searchMenu</string>
+    <string name="_2021_william_javier_purificacion_copyrighted">2021, William Javier Purificacion, Copyrighted</string>
+    <string name="troubleLocation">Trouble with finding location!</string>
+    <string name="no_data_for_location">No Data For Location</string>
+</resources>
