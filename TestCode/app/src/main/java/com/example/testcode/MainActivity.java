@@ -19,8 +19,10 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.net.NetworkInfo;
+import android.widget.Toast;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,7 +41,7 @@ implements View.OnClickListener, View.OnLongClickListener {
 
     private boolean isConnected;
 
-    private final HashMap<String, ArrayList<Country>> countryData = new HashMap<>();
+    private ArrayList<Country> countryData = new ArrayList<>();
     private final ArrayList<ArrayList<String>> stockListDB = new ArrayList<>();
 
     static String country;
@@ -88,45 +90,40 @@ implements View.OnClickListener, View.OnLongClickListener {
             et.setGravity(Gravity.CENTER_HORIZONTAL);
             builder.setView(et);
 
-            HashMap<String, ArrayList<Country>> matching = new HashMap<>();
+            HashMap<String, String> matching = new HashMap<>();
 
             builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     String input;
                     input = et.getText().toString();
                     country = input;
-                    CovidRunnable t = new CovidRunnable(MainActivity.this, country);
-                    new Thread(t).start();
 ////////////////////////////////////////////
                     Log.d(TAG, "onClick: CountryData is "+countryData);
-                    for (Map.Entry<String, ArrayList<Country>> set : countryData.entrySet()){
-                        if (set.getKey().contains(input) || set.getValue().contains(input.toLowerCase())){
-                            //found a possible match
-                            Log.d(TAG, "onOptionsItemSelected: key inputted: " + input);
-                            matching.put(set.getKey(), set.getValue());
+
+                    ArrayList<String> tempList = new ArrayList<>();
+                    for (int i = 0 ; i < countryData.size() ; i++){
+                        if(countryData.get(i).toString().contains(input)){
+                            tempList.add(countryData.get(i).toString());
                         } else{
-                            Log.d(TAG, "onClick: setgetvalue indexed "+set.getValue().get(0));
+                            //Log.d(TAG, "onClick: setgetvalue indexed "+set.getValue().get(0));
                         }
                     }
+                    Log.d(TAG, "onClick: tempList is "+tempList);
 
-                    for(String country1 : countryData.get("All"))
-
-                    if (matching.size() == 0){
+                    if (tempList.size() == 0){
                         Log.d(TAG, "onClick: no matches");
-                        //noMatches();
+                        noMatches();
                     }
-                    else if (matching.size() == 1){
+                    else if (tempList.size() == 1){
                         Log.d(TAG, "onClick: one match");
-                        for (Map.Entry<String, ArrayList<Country>> set : matching.entrySet()){
-
-                            String symbol = set.getKey();
-                            Log.d(TAG, "onClick: key in hm: " + symbol);
-                            //oneMatch(symbol);
-                        }
+                        oneMatch(country);
+                    }
+                    else if (tempList.size() > 1){
+                        Log.d(TAG, "onClick: many matches: " + tempList.size());
+                        manyMatches(tempList);
                     }
                     else {
-                        Log.d(TAG, "onClick: many matches: " + matching.size());
-                        //manyMatches(matching);
+                        Log.d(TAG, "onClick: weird result (negative tempList size)");
                     }
                 }
             });
@@ -158,7 +155,46 @@ implements View.OnClickListener, View.OnLongClickListener {
 
     public void updateCountry(ArrayList<Country> listIn) {
 
-        countryData.put("All", listIn);
+        countryData = listIn;
 
     }
+
+    public void noMatches(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("No matches");
+        builder.setMessage("no data");
+        AlertDialog dialog1 = builder.create();
+        dialog1.show();
+    }
+
+    public void oneMatch(String countryPassed) {
+        CovidRunnable covidRunnable = new CovidRunnable(MainActivity.this, countryPassed);
+        new Thread(covidRunnable).start();
+    }
+
+    public void manyMatches(ArrayList<String> passedList){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Make a selection");
+        //make an array of strings
+        final CharSequence[] sArray = new CharSequence[passedList.size()];
+        for (int i = 0; i < passedList.size(); i++)
+            sArray[i] = passedList.get(i);
+
+        builder.setItems(sArray, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                //Toast.makeText(MainActivity.this, "Chosen something! "+which, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Chosen something! "+sArray[which], Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Nevermind", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                Toast.makeText(MainActivity.this, "You changed your mind!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        AlertDialog dialog = builder.create();
+
+        dialog.show();
+
+    }
+
 }
