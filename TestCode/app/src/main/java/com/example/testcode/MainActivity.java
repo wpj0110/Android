@@ -1,10 +1,15 @@
 package com.example.testcode;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -17,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.net.NetworkInfo;
 import android.widget.Toast;
@@ -41,6 +47,11 @@ implements View.OnClickListener, View.OnLongClickListener {
 
     private boolean isConnected;
 
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private ArrayAdapter<String> arrayAdapter;
+
     private ArrayList<Country> countryData = new ArrayList<>();
     private final ArrayList<ArrayList<String>> stockListDB = new ArrayList<>();
 
@@ -50,6 +61,34 @@ implements View.OnClickListener, View.OnLongClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        //DrawerList guide https://www.geeksforgeeks.org/navigation-drawer-in-android/
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        mDrawerList = findViewById(R.id.drawer_list);
+
+        // Set up the drawer item click callback method
+        mDrawerList.setOnItemClickListener(
+                (parent, view, position, id) -> {
+                    selectItem(position);
+                    mDrawerLayout.closeDrawer(mDrawerList);
+                }
+        );
+
+        // Create the drawer toggle
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                mDrawerLayout,         /* DrawerLayout object */
+                R.string.drawer_open,  /* "open drawer" description for accessibility */
+                R.string.drawer_close  /* "close drawer" description for accessibility */
+        );
+
+        //needed this to show the drawerList on the action bar.
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
+
+
         // Load all the countries
         if (countryData.isEmpty()) {
             CountryLoaderRunnable clr = new CountryLoaderRunnable(this);
@@ -57,16 +96,40 @@ implements View.OnClickListener, View.OnLongClickListener {
         }
 
 
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) { //nothing to change
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) { //nothing to change
+        super.onConfigurationChanged(newConfig);
+        // Pass any configuration change to the drawer toggls
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+    private void selectItem(int position) {
+
+        mDrawerLayout.closeDrawer(mDrawerList);
 
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    //@Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            Log.d(TAG, "onOptionsItemSelected: mDrawerToggle " + item);
+            return true;
+        }
 
         if (item.getItemId() == R.id.add) {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -197,5 +260,8 @@ implements View.OnClickListener, View.OnLongClickListener {
         dialog.show();
 
     }
+
+    // You need the 2 below to make the drawer-toggle work properly:
+
 
 }
