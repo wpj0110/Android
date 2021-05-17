@@ -8,7 +8,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -23,22 +22,13 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.net.NetworkInfo;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity
 implements View.OnClickListener, View.OnLongClickListener {
@@ -51,10 +41,12 @@ implements View.OnClickListener, View.OnLongClickListener {
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private ArrayAdapter<String> arrayAdapter;
+    private DatabaseHandler databaseHandler;
 
+    private final List<Covid> covidList = new ArrayList<>(); //main list
     private ArrayList<Country> countryData = new ArrayList<>();
     private final ArrayList<String> countryStringList = new ArrayList<>();
-    private final ArrayList<ArrayList<String>> stockListDB = new ArrayList<>();
+    private final ArrayList<ArrayList<String>> covidListDB = new ArrayList<>();
 
     static String country;
     @Override
@@ -219,7 +211,7 @@ implements View.OnClickListener, View.OnLongClickListener {
 
     public void updateCountry(ArrayList<Country> listIn) {
 
-        Log.d(TAG, "updateCountry: listln = "+listIn);
+        Log.d(TAG, "updateCountry: listIn = "+listIn);
         for (int i = 0 ; i < listIn.size() ; i++)
             countryStringList.add(listIn.get(i).toString());
         countryData = listIn;
@@ -266,7 +258,95 @@ implements View.OnClickListener, View.OnLongClickListener {
 
     }
 
-    // You need the 2 below to make the drawer-toggle work properly:
+    public void loadCountries(){ //using the runnable, and also the database
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
+        if (isConnected) { //loads all country names first from the api
+            CountryLoaderRunnable countryLoaderRunnable = new CountryLoaderRunnable(this);
+            new Thread(countryLoaderRunnable).start();
+        }
+
+        databaseHandler.dumpDbToLog();
+
+        ArrayList<ArrayList<String>> list = databaseHandler.loadCovid();
+        covidListDB.clear();
+        covidListDB.addAll(list);
+
+        covidList.clear(); //ensures the list is really empty
+
+        for (int i = 0; i< covidListDB.size(); i++){
+            if (isConnected) {
+                CovidRunnable covidLoaderRunnable = new CovidRunnable(MainActivity.this, covidListDB.get(i).get(0));
+                new Thread(covidLoaderRunnable).start();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            else{
+                String confirmed = covidListDB.get(i).get(0);
+                String country = covidListDB.get(i).get(1);
+                String recovered = covidListDB.get(i).get(2);
+                String critical = covidListDB.get(i).get(3);
+                String deaths = covidListDB.get(i).get(4);
+                String lastChange = covidListDB.get(i).get(5);
+                String lastUpdate = covidListDB.get(i).get(6);
+
+                Covid countryCovid = new Covid(confirmed, country, recovered, critical, deaths,lastChange,lastUpdate);
+                addCountry(countryCovid);
+            }
+        }
+
+        if (!isConnected){
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("No Network Connection");
+            builder.setMessage("Stocks cannot be updated without a network connection");
+            AlertDialog dialog1 = builder.create();
+            dialog1.show();
+        }
+    }
+
+    public void addCountry(Covid countryCovid) {
+        databaseHandler.addCountry(countryCovid);
+        covidList.add(countryCovid);
+
+        ArrayList<ArrayList<String>> list = databaseHandler.loadCovid();
+        covidListDB.clear();
+        covidListDB.addAll(list);
+
+        //sort list
+        ArrayList<String> DBTemp = new ArrayList<>();
+        ArrayList<Covid> tempCovidList = new ArrayList<>(covidList);
+
+        for (int i=0;i<covidListDB.size();i++){
+            DBTemp.add(covidListDB.get(i).get(0));
+        }
+
+        Collections.sort(DBTemp);
+        Log.d(TAG, "addCovid: DBTemp size:" + DBTemp.size());
+        Log.d(TAG, "addCovid: tempCovidList size:" + tempCovidList.size());
+        covidList.clear();
+
+        for (int i=0;i<DBTemp.size();i++){
+            for (int j=0;j<tempCovidList.size();j++){
+                if (tempCovidList.get(j).getCountry().equals(DBTemp.get(i))) {
+                    covidList.add(tempCovidList.get(j));
+                }
+            }
+        }
+
+        sAdapter.notifyDataSetChanged();
+    }
+
+    public void removeStock(int index) {
+        if (!covidList.isEmpty()) {
+            databaseHandler.deleteCountry(covidList.get(index).getCountry());
+            covidList.remove(index);
+            sAdapter.notifyDataSetChanged();
+        }
+    }
 
 }
