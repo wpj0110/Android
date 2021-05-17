@@ -106,6 +106,11 @@ implements View.OnClickListener, View.OnLongClickListener {
     }
     private void selectItem(int position) {
 
+        //oneMatch(covidList.get(position).toString());
+        //Toast.makeText(MainActivity.this, "Chosen something! "+sArray[which], Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this, "Chosen something! "+countryData.get(position).toString(), Toast.LENGTH_SHORT).show();
+        oneMatch(countryData.get(position).toString()); //the choice
+
         mDrawerLayout.closeDrawer(mDrawerList);
 
     }
@@ -245,6 +250,7 @@ implements View.OnClickListener, View.OnLongClickListener {
             public void onClick(DialogInterface dialog, int which) {
                 //Toast.makeText(MainActivity.this, "Chosen something! "+which, Toast.LENGTH_SHORT).show();
                 Toast.makeText(MainActivity.this, "Chosen something! "+sArray[which], Toast.LENGTH_SHORT).show();
+                oneMatch(sArray[which].toString()); //the choice
             }
         });
         builder.setNegativeButton("Nevermind", new DialogInterface.OnClickListener() {
@@ -338,14 +344,14 @@ implements View.OnClickListener, View.OnLongClickListener {
             }
         }
 
-        sAdapter.notifyDataSetChanged();
+        //sAdapter.notifyDataSetChanged();
     }
 
     public void removeStock(int index) {
         if (!covidList.isEmpty()) {
             databaseHandler.deleteCountry(covidList.get(index).getCountry());
             covidList.remove(index);
-            sAdapter.notifyDataSetChanged();
+            //sAdapter.notifyDataSetChanged();
         }
     }
 
