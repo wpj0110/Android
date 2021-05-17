@@ -5,6 +5,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -42,6 +43,7 @@ implements View.OnClickListener, View.OnLongClickListener {
     private ActionBarDrawerToggle mDrawerToggle;
     private ArrayAdapter<String> arrayAdapter;
     private DatabaseHandler databaseHandler;
+    private SwipeRefreshLayout swiper;
 
     private final List<Covid> covidList = new ArrayList<>(); //main list
     private ArrayList<Country> countryData = new ArrayList<>();
@@ -80,6 +82,13 @@ implements View.OnClickListener, View.OnLongClickListener {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
+        swiper = findViewById(R.id.swiper);
+        swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                doRefresh();
+            }
+        });
 
 
         // Load all the countries
@@ -353,6 +362,79 @@ implements View.OnClickListener, View.OnLongClickListener {
             covidList.remove(index);
             //sAdapter.notifyDataSetChanged();
         }
+    }
+
+    public void loadEverything(){
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+
+        if (isConnected) {
+            CountryLoaderRunnable nameLoaderRunnable = new CountryLoaderRunnable(this);
+            new Thread(nameLoaderRunnable).start();
+            //stockListAll is now full of all stocks possible
+        }
+
+        databaseHandler.dumpDbToLog();
+
+        ArrayList<ArrayList<String>> list = databaseHandler.loadCovid();
+        covidListDB.clear();
+        covidListDB.addAll(list);
+
+        covidList.clear();
+
+        for (int i=0;i<covidListDB.size();i++){
+            if (isConnected) {
+                CovidRunnable covidRunnable = new CovidRunnable(MainActivity.this, covidListDB.get(i).get(0));
+                new Thread(covidRunnable).start();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            else{
+
+                String confirmed = covidListDB.get(i).get(0);
+                String country = covidListDB.get(i).get(1);
+                String recovered = covidListDB.get(i).get(2);
+                String critical = covidListDB.get(i).get(3);
+                String deaths = covidListDB.get(i).get(4);
+                String lastChange = covidListDB.get(i).get(5);
+                String lastUpdate = covidListDB.get(i).get(6);
+
+                Covid countryCovid = new Covid(confirmed, country, recovered, critical, deaths,lastChange,lastUpdate);
+                addCountry(countryCovid);
+            }
+        }
+
+        if (!isConnected){
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("No Network Connection");
+            builder.setMessage("Stocks cannot be updated without a network connection");
+            AlertDialog dialog1 = builder.create();
+            dialog1.show();
+        }
+    }
+
+
+    public void doRefresh(){
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+
+        if (!isConnected) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("No Network Connection");
+            builder.setMessage("Countries cannot be updated without a network connection");
+            AlertDialog dialog1 = builder.create();
+            dialog1.show();
+            swiper.setRefreshing(false);
+            return;
+        }
+
+        loadEverything();
+        swiper.setRefreshing(false);
     }
 
 }
