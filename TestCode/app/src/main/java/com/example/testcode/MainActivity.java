@@ -433,7 +433,7 @@ implements View.OnClickListener, View.OnLongClickListener {
             return;
         }
 
-        loadEverything();
+        //loadEverything();
         swiper.setRefreshing(false);
     }
 
