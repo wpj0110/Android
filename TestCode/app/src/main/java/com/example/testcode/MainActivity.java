@@ -5,6 +5,8 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
@@ -44,6 +46,8 @@ implements View.OnClickListener, View.OnLongClickListener {
     private ArrayAdapter<String> arrayAdapter;
     private DatabaseHandler databaseHandler;
     private SwipeRefreshLayout swiper;
+    private RecyclerView recyclerView;
+    private CountryAdapter cAdapter;
 
     private final List<Covid> covidList = new ArrayList<>(); //main list
     private ArrayList<Country> countryData = new ArrayList<>();
@@ -82,6 +86,13 @@ implements View.OnClickListener, View.OnLongClickListener {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
+
+        recyclerView = findViewById(R.id.recycler);
+        cAdapter = new CountryAdapter(covidList, this);
+        recyclerView.setAdapter(cAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        databaseHandler = new DatabaseHandler(this);
+
         swiper = findViewById(R.id.swiper);
         swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -411,7 +422,7 @@ implements View.OnClickListener, View.OnLongClickListener {
         if (!isConnected){
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("No Network Connection");
-            builder.setMessage("Stocks cannot be updated without a network connection");
+            builder.setMessage("Countries cannot be updated without a network connection");
             AlertDialog dialog1 = builder.create();
             dialog1.show();
         }
