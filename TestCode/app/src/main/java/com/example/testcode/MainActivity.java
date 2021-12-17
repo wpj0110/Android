@@ -60,6 +60,7 @@ implements View.OnClickListener, View.OnLongClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG, "onCreate: ");
 
         //DrawerList guide https://www.geeksforgeeks.org/navigation-drawer-in-android/
         mDrawerLayout = findViewById(R.id.drawer_layout);
@@ -112,8 +113,23 @@ implements View.OnClickListener, View.OnLongClickListener {
     }
 
     @Override
+    protected void onResume() {
+        Log.d(TAG, "onResume: ");
+        loadCountries();
+        super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "onDestroy: ");
+        databaseHandler.shutDown();
+        super.onDestroy();
+    }
+
+    @Override
     protected void onPostCreate(Bundle savedInstanceState) { //nothing to change
         super.onPostCreate(savedInstanceState);
+        Log.d(TAG, "onPostCreate: ");
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
     }
@@ -121,10 +137,12 @@ implements View.OnClickListener, View.OnLongClickListener {
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) { //nothing to change
         super.onConfigurationChanged(newConfig);
+        Log.d(TAG, "onConfigurationChanged: ");
         // Pass any configuration change to the drawer toggls
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
     private void selectItem(int position) {
+        Log.d(TAG, "selectItem: ");
 
         //oneMatch(covidList.get(position).toString());
         //Toast.makeText(MainActivity.this, "Chosen something! "+sArray[which], Toast.LENGTH_SHORT).show();
@@ -137,6 +155,7 @@ implements View.OnClickListener, View.OnLongClickListener {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d(TAG, "onCreateOptionsMenu: ");
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
@@ -285,6 +304,7 @@ implements View.OnClickListener, View.OnLongClickListener {
     }
 
     public void loadCountries(){ //using the runnable, and also the database
+        Log.d(TAG, "loadCountries: ");
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
@@ -336,6 +356,7 @@ implements View.OnClickListener, View.OnLongClickListener {
     }
 
     public void addCountry(Covid countryCovid) {
+        Log.d(TAG, "addCountry: ");
         databaseHandler.addCountry(countryCovid);
         covidList.add(countryCovid);
 
@@ -368,13 +389,14 @@ implements View.OnClickListener, View.OnLongClickListener {
     }
 
     public void removeStock(int index) {
+        Log.d(TAG, "removeStock: ");
         if (!covidList.isEmpty()) {
             databaseHandler.deleteCountry(covidList.get(index).getCountry());
             covidList.remove(index);
             //sAdapter.notifyDataSetChanged();
         }
     }
-
+/*
     public void loadEverything(){
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
@@ -428,8 +450,11 @@ implements View.OnClickListener, View.OnLongClickListener {
         }
     }
 
+ */
+
 
     public void doRefresh(){
+        Log.d(TAG, "doRefresh: ");
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class DatabaseHandler extends SQLiteOpenHelper {
 
-    private static final String TAG = "DatabaseHandler";
+    private static final String TAG = "DatabaseHandlerTAG";
 
     // If you change the database schema, you must increment the database version.
     private static final int DATABASE_VERSION = 1;
@@ -59,9 +59,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.d(TAG, "onUpgrade: ");
     }
 
     public ArrayList<ArrayList<String>> loadCovid() {
+        Log.d(TAG, "loadCovid: ");
 
         ArrayList<ArrayList<String>> stocks = new ArrayList<>();
 
@@ -106,6 +108,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     void addCountry(Covid countryCovid) {
+        Log.d(TAG, "addCountry: ");
         try {
             ContentValues values = new ContentValues();
 
@@ -124,6 +127,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     void updateCountry(Covid countryCovid) {
+        Log.d(TAG, "updateCountry: ");
         ContentValues values = new ContentValues();
 
         values.put(CONFIRMED, countryCovid.getConfirmed());
@@ -141,17 +145,20 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     void deleteCountry(String symbol) {
+        Log.d(TAG, "deleteCountry: ");
         int cnt = database.delete(TABLE_NAME, CONFIRMED + " = ?",
                 new String[]{symbol}
         );
     }
 
     void dumpDbToLog() {
+        Log.d(TAG, "dumpDbToLog: ");
         Cursor cursor = database.rawQuery("select * from " + TABLE_NAME, null);
         if (cursor != null) {
             cursor.moveToFirst();
 
             Log.d(TAG, "dumpDbToLog: vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
+            /*
             for (int i = 0; i < cursor.getCount(); i++) {
                 String confirmed = cursor.getString(0);
                 String country = cursor.getString(1);
@@ -170,6 +177,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                         String.format("%s %-18s", LASTUPDATE + ":", lastUpdate));
                 cursor.moveToNext();
             }
+
+             */
             cursor.close();
         }
 

@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">androidNotes</string>
+    <string name="android_notes">Android Notes</string>
+    <string name="copyrighted_2021_william_javier_purificacion">Copyrighted 2021, William Javier Purificacion</string>
+    <string name="version_1_0">Version 1.0</string>
+    <string name="enter_description">Enter Description</string>
+    <string name="enter_title">Enter Title</string>
+</resources>
